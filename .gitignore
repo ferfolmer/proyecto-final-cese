@@ -1,3 +1,7 @@
+# Created by https://www.toptal.com/developers/gitignore/api/linux,c,visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=linux,c,visualstudiocode
+
+### C ###
 # Prerequisites
 *.d
 
@@ -51,5 +55,40 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# debug information files
-*.dwo
+### Linux ###
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+build/
+
+# End of https://www.toptal.com/developers/gitignore/api/linux,c,visualstudiocode
