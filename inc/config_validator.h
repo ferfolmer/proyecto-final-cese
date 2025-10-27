@@ -6,7 +6,11 @@
 
 typedef struct ConfigValidator * ConfigValidatorHandle;
 
-typedef enum { CONFIG_OK = 0 } ConfigValidatorError;
+typedef enum {
+    CONFIG_OK = 0,
+    CONFIG_ERROR_NULL_POINTER,
+    CONFIG_ERROR_INVALID_PARAMETER
+} ConfigValidatorError;
 
 ConfigValidatorHandle ConfigValidator_Create(void);
 void ConfigValidator_Destroy(ConfigValidatorHandle handle);

@@ -1,4 +1,5 @@
 #include "config_validator.h"
+#include <stdbool.h>
 
 struct ConfigValidator {
     uint16_t dli;
@@ -7,6 +8,14 @@ struct ConfigValidator {
 };
 
 static struct ConfigValidator instance;
+
+static bool isValidHandle(ConfigValidatorHandle handle) {
+    return handle != NULL;
+}
+
+static bool isValidPointer(const void * ptr) {
+    return ptr != NULL;
+}
 
 ConfigValidatorHandle ConfigValidator_Create(void) {
     instance.dli = 0;
@@ -20,16 +29,19 @@ void ConfigValidator_Destroy(ConfigValidatorHandle handle) {
 }
 
 ConfigValidatorError ConfigValidator_GetDLI(ConfigValidatorHandle handle, uint16_t * dli) {
-    if (handle == NULL || dli == NULL) {
-        return CONFIG_OK;
+    if (!isValidHandle(handle) || !isValidPointer(dli)) {
+        return CONFIG_ERROR_NULL_POINTER;
     }
     *dli = handle->dli;
     return CONFIG_OK;
 }
 
 ConfigValidatorError ConfigValidator_SetDLI(ConfigValidatorHandle handle, uint16_t dli) {
-    if (handle == NULL) {
-        return CONFIG_OK;
+    if (!isValidHandle(handle)) {
+        return CONFIG_ERROR_NULL_POINTER;
+    }
+    if (dli == 0) {
+        return CONFIG_ERROR_INVALID_PARAMETER;
     }
     handle->dli = dli;
     return CONFIG_OK;
@@ -37,8 +49,8 @@ ConfigValidatorError ConfigValidator_SetDLI(ConfigValidatorHandle handle, uint16
 
 ConfigValidatorError ConfigValidator_GetPhotoperiod(ConfigValidatorHandle handle,
                                                     uint8_t * photoperiod) {
-    if (handle == NULL || photoperiod == NULL) {
-        return CONFIG_OK;
+    if (!isValidHandle(handle) || !isValidPointer(photoperiod)) {
+        return CONFIG_ERROR_NULL_POINTER;
     }
     *photoperiod = handle->photoperiod;
     return CONFIG_OK;
@@ -46,24 +58,27 @@ ConfigValidatorError ConfigValidator_GetPhotoperiod(ConfigValidatorHandle handle
 
 ConfigValidatorError ConfigValidator_SetPhotoperiod(ConfigValidatorHandle handle,
                                                     uint8_t photoperiod) {
-    if (handle == NULL) {
-        return CONFIG_OK;
+    if (!isValidHandle(handle)) {
+        return CONFIG_ERROR_NULL_POINTER;
+    }
+    if (photoperiod == 0 || photoperiod > 24) {
+        return CONFIG_ERROR_INVALID_PARAMETER;
     }
     handle->photoperiod = photoperiod;
     return CONFIG_OK;
 }
 
 ConfigValidatorError ConfigValidator_GetRiseTime(ConfigValidatorHandle handle, uint8_t * riseTime) {
-    if (handle == NULL || riseTime == NULL) {
-        return CONFIG_OK;
+    if (!isValidHandle(handle) || !isValidPointer(riseTime)) {
+        return CONFIG_ERROR_NULL_POINTER;
     }
     *riseTime = handle->riseTime;
     return CONFIG_OK;
 }
 
 ConfigValidatorError ConfigValidator_SetRiseTime(ConfigValidatorHandle handle, uint8_t riseTime) {
-    if (handle == NULL) {
-        return CONFIG_OK;
+    if (!isValidHandle(handle)) {
+        return CONFIG_ERROR_NULL_POINTER;
     }
     handle->riseTime = riseTime;
     return CONFIG_OK;
