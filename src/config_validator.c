@@ -1,6 +1,14 @@
 #include "config_validator.h"
 #include <stdbool.h>
 
+/* Validation ranges */
+#define DLI_MIN         1
+#define DLI_MAX         65535
+#define PHOTOPERIOD_MIN 1
+#define PHOTOPERIOD_MAX 24
+#define RISE_TIME_MIN   30
+#define RISE_TIME_MAX   90
+
 struct ConfigValidator {
     uint16_t dli;
     uint8_t photoperiod;
@@ -15,6 +23,10 @@ static bool isValidHandle(ConfigValidatorHandle handle) {
 
 static bool isValidPointer(const void * ptr) {
     return ptr != NULL;
+}
+
+static bool isInRange(uint16_t value, uint16_t min, uint16_t max) {
+    return (value >= min) && (value <= max);
 }
 
 ConfigValidatorHandle ConfigValidator_Create(void) {
@@ -40,7 +52,7 @@ ConfigValidatorError ConfigValidator_SetDLI(ConfigValidatorHandle handle, uint16
     if (!isValidHandle(handle)) {
         return CONFIG_ERROR_NULL_POINTER;
     }
-    if (dli == 0) {
+    if (!isInRange(dli, DLI_MIN, DLI_MAX)) {
         return CONFIG_ERROR_INVALID_PARAMETER;
     }
     handle->dli = dli;
@@ -61,7 +73,7 @@ ConfigValidatorError ConfigValidator_SetPhotoperiod(ConfigValidatorHandle handle
     if (!isValidHandle(handle)) {
         return CONFIG_ERROR_NULL_POINTER;
     }
-    if (photoperiod == 0 || photoperiod > 24) {
+    if (!isInRange(photoperiod, PHOTOPERIOD_MIN, PHOTOPERIOD_MAX)) {
         return CONFIG_ERROR_INVALID_PARAMETER;
     }
     handle->photoperiod = photoperiod;
@@ -79,6 +91,9 @@ ConfigValidatorError ConfigValidator_GetRiseTime(ConfigValidatorHandle handle, u
 ConfigValidatorError ConfigValidator_SetRiseTime(ConfigValidatorHandle handle, uint8_t riseTime) {
     if (!isValidHandle(handle)) {
         return CONFIG_ERROR_NULL_POINTER;
+    }
+    if (!isInRange(riseTime, RISE_TIME_MIN, RISE_TIME_MAX)) {
+        return CONFIG_ERROR_INVALID_PARAMETER;
     }
     handle->riseTime = riseTime;
     return CONFIG_OK;
