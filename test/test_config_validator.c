@@ -283,3 +283,82 @@ void test_ConfigValidator_SetRiseTime_OverwritesPreviousValue(void) {
     ConfigValidator_GetRiseTime(validator, &riseTime);
     TEST_ASSERT_EQUAL_UINT8(90, riseTime);
 }
+
+// ========== Test 27: FallTime has known initial state ==========
+void test_ConfigValidator_FallTimeHasKnownInitialState(void) {
+    uint8_t fallTime = 99;
+    ConfigValidatorError result = ConfigValidator_GetFallTime(validator, &fallTime);
+    TEST_ASSERT_EQUAL(CONFIG_OK, result);
+    TEST_ASSERT_EQUAL_UINT8(0, fallTime);
+}
+
+// ========== Test 28: Accept valid fall time ==========
+void test_ConfigValidator_AcceptsValidFallTime(void) {
+    uint8_t fallTime = 0;
+
+    ConfigValidatorError result = ConfigValidator_SetFallTime(validator, 60);
+
+    TEST_ASSERT_EQUAL(CONFIG_OK, result);
+
+    ConfigValidator_GetFallTime(validator, &fallTime);
+    TEST_ASSERT_EQUAL_UINT8(60, fallTime);
+}
+
+// ========== Test 29: Reject fall time < 30 min ==========
+void test_ConfigValidator_SetFallTime_RejectsBelowMinimum(void) {
+    ConfigValidatorError result = ConfigValidator_SetFallTime(validator, 29);
+
+    TEST_ASSERT_EQUAL(CONFIG_ERROR_INVALID_PARAMETER, result);
+
+    uint8_t fallTime = 99;
+    ConfigValidator_GetFallTime(validator, &fallTime);
+    TEST_ASSERT_EQUAL_UINT8(0, fallTime);
+}
+
+// ========== Test 30: Accept minimum fall time (30 min) ==========
+void test_ConfigValidator_SetFallTime_AcceptsMinimum(void) {
+    ConfigValidatorError result = ConfigValidator_SetFallTime(validator, 30);
+
+    TEST_ASSERT_EQUAL(CONFIG_OK, result);
+
+    uint8_t fallTime = 0;
+    ConfigValidator_GetFallTime(validator, &fallTime);
+    TEST_ASSERT_EQUAL_UINT8(30, fallTime);
+}
+
+// ========== Test 31: Accept maximum fall time (90 min) ==========
+void test_ConfigValidator_SetFallTime_AcceptsMaximum(void) {
+    ConfigValidatorError result = ConfigValidator_SetFallTime(validator, 90);
+
+    TEST_ASSERT_EQUAL(CONFIG_OK, result);
+
+    uint8_t fallTime = 0;
+    ConfigValidator_GetFallTime(validator, &fallTime);
+    TEST_ASSERT_EQUAL_UINT8(90, fallTime);
+}
+
+// ========== Test 32: Reject fall time > 90 min ==========
+void test_ConfigValidator_SetFallTime_RejectsAboveMaximum(void) {
+    ConfigValidatorError result = ConfigValidator_SetFallTime(validator, 91);
+
+    TEST_ASSERT_EQUAL(CONFIG_ERROR_INVALID_PARAMETER, result);
+
+    uint8_t fallTime = 99;
+    ConfigValidator_GetFallTime(validator, &fallTime);
+    TEST_ASSERT_EQUAL_UINT8(0, fallTime);
+}
+
+// ========== Test 33: FallTime independent from RiseTime ==========
+void test_ConfigValidator_FallTimeIndependentFromRiseTime(void) {
+    ConfigValidator_SetRiseTime(validator, 30);
+    ConfigValidator_SetFallTime(validator, 90);
+
+    uint8_t riseTime = 0;
+    uint8_t fallTime = 0;
+
+    ConfigValidator_GetRiseTime(validator, &riseTime);
+    ConfigValidator_GetFallTime(validator, &fallTime);
+
+    TEST_ASSERT_EQUAL_UINT8(30, riseTime);
+    TEST_ASSERT_EQUAL_UINT8(90, fallTime);
+}

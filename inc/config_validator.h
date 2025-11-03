@@ -22,4 +22,6 @@ ConfigValidatorError ConfigValidator_SetPhotoperiod(ConfigValidatorHandle handle
                                                     uint8_t photoperiod);
 ConfigValidatorError ConfigValidator_GetRiseTime(ConfigValidatorHandle handle, uint8_t * riseTime);
 ConfigValidatorError ConfigValidator_SetRiseTime(ConfigValidatorHandle handle, uint8_t riseTime);
+ConfigValidatorError ConfigValidator_GetFallTime(ConfigValidatorHandle handle, uint8_t * fallTime);
+ConfigValidatorError ConfigValidator_SetFallTime(ConfigValidatorHandle handle, uint8_t fallTime);
 #endif
