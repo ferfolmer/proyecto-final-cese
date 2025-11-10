@@ -1,0 +1,4 @@
+---
+:source:
+  :dependencies:
+    - sensor_driver.c
