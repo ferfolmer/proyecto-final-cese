@@ -1,227 +1,296 @@
-# Validador de Configuracion para Control de Iluminacion basado en DLI
+# Controlador Multicanal de PPFD para Ambientes Controlados
 
-## Descripcion General del Proyecto
+## Descripción General del Proyecto
 
-Este proyecto forma parte del trabajo final de la Especializacion en Sistemas Embebidos (CESE) de la FIUBA. El modulo presentado ha sido desarrollado empleando la metodologia **Test-Driven Development (TDD)**, siguiendo los lineamientos establecidos por James Grenning en su obra "Test-Driven Development for Embedded C".
+Este proyecto forma parte del trabajo final de la Especialización en Sistemas Embebidos (CESE) de la FIUBA. El sistema completo ha sido desarrollado empleando la metodología **Test-Driven Development (TDD)**, siguiendo los lineamientos establecidos por el libro "Test-Driven Development for Embedded C".
 
-El modulo implementado es un validador de configuracion para un controlador multicanal de PPFD (Photosynthetic Photon Flux Density) destinado a aplicaciones de cultivo en ambientes controlados. El sistema permite configurar la iluminacion mediante un objetivo de DLI (Daily Light Integral), validando que los parametros ingresados sean alcanzables dentro de las restricciones fisicas del hardware.
+El proyecto implementa un **controlador completo de PPFD (Photosynthetic Photon Flux Density)** multicanal para aplicaciones de cultivo en ambientes controlados. El sistema permite:
 
-## Caso de Uso Principal: Configuracion de Iluminacion por DLI
-
-El sistema implementa el siguiente flujo de interaccion con el usuario:
-
-### Flujo Normal
-
-1. El sistema solicita el valor objetivo de DLI (mol/m^2/dia)
-2. El usuario ingresa el valor numerico deseado
-3. El sistema solicita la duracion del fotoperiodo (horas de luz por dia)
-4. El usuario especifica la cantidad de horas (valor entero)
-5. El sistema solicita la configuracion de rampas de encendido y apagado
-6. El usuario define los tiempos de rampa en minutos
-7. El sistema valida que el DLI objetivo sea alcanzable con los parametros ingresados
-8. Si la validacion es exitosa, el sistema calcula y muestra las intensidades luminicas resultantes
-9. El usuario confirma la configuracion
-10. El sistema persiste los parametros validados
-
-### Flujo Alternativo
-
-Cuando el sistema determina que el DLI objetivo no es alcanzable con los parametros ingresados y las restricciones del hardware, ofrece las siguientes alternativas:
-
-- Sugerir un valor de DLI alcanzable manteniendo los demas parametros
-- Proponer un incremento en el fotoperiodo que permita alcanzar el DLI deseado
-- Recomendar la reduccion de los tiempos de rampa para maximizar el tiempo efectivo de iluminacion
-
-## Restricciones del Sistema
-
-### Sensor de PPFD
-- **Rango de medicion:** 0 - 2000 umol/m^2/s
-- El limite superior define la intensidad luminica maxima controlable por el sistema
-
-### Fotoperiodo
-- **Valor minimo:** 1 hora
-- **Tipo de dato:** Entero sin signo de 8 bits (uint8_t)
-- No se admiten valores fraccionarios
-
-### Tiempos de Rampa (Rise/Fall Time)
-- **Rango valido:** 30 - 90 minutos
-- **Justificacion:** Limitar la corriente de arranque (*inrush current*) en el encendido/apagado del sistema de iluminacion
-- Valores inferiores podrian generar transitorios electricos no deseados
-
-### DLI (Daily Light Integral)
-- **Tipo de dato:** Entero sin signo de 16 bits (uint16_t)
-- **Unidades:** mol/m^2/dia
-- **Validacion:** Debe ser alcanzable considerando el fotoperiodo, tiempos de rampa y limite superior del sensor PPFD
-
-## Metodologia de Desarrollo: Test-Driven Development
-
-El desarrollo del modulo se realiza siguiendo estrictamente la metodologia TDD, tal como se describe en la bibliografia de referencia (Grenning, 2011).
-
-### Ciclo TDD
-
-El proceso iterativo consta de tres fases:
-
-1. **RED (Rojo):** Escritura de un test que falla, definiendo el comportamiento esperado
-2. **GREEN (Verde):** Implementacion del codigo minimo necesario para que el test pase
-3. **REFACTOR (Refactorizacion):** Mejora del codigo manteniendo la funcionalidad validada por los tests
-
-### Principios Aplicados
-
-- **Validacion de tests:** Todo test debe ser observado en estado de falla antes de implementar la funcionalidad correspondiente
-- **Desarrollo incremental:** Se implementa una funcionalidad a la vez, guiada por los tests
-- **Implementacion minima:** Se escribe unicamente el codigo necesario para satisfacer el test actual
-- **Asignacion estatica de memoria:** Apropiada para sistemas embebidos, evitando el uso de asignacion dinamica
-
-## Entorno de Testing: Ceedling
-
-El proyecto utiliza el framework **Ceedling** (version 1.0.1), que integra las siguientes herramientas:
-
-- **Unity:** Framework de assertions para C
-- **CMock:** Generador de mocks para interfaces en C
-- **GCov/GCovr:** Herramientas de analisis de cobertura de codigo
-
-### Comandos de Ejecucion
-
-```bash
-# Ejecucion de todos los tests
-ceedling test:all
-
-# Ejecucion de tests del modulo config_validator
-ceedling test:config_validator
-
-# Generacion de reporte de cobertura de codigo
-ceedling gcov:all
-```
+- **Control automático de intensidad luminosa** basado en setpoint de PPFD
+- **Control proporcional (PI)** en lazo cerrado con sensor de PPFD
+- **Gestión de calibración** del sensor con datos persistentes
+- **Múltiples canales LED** (Rojo, Azul, Far-Red, White)
+- **Máquina de estados** para coordinación de modos operativos
+- **Configuración por DLI** (Daily Light Integral) con validación de parámetros
 
 ## Estado Actual del Desarrollo
 
-### Tests Implementados: 4 de 33 planificados
+### ✅ 205 Tests Unitarios Pasando
 
-**Fase 1 - Ciclo de vida del modulo:**
-- [x] `test_ConfigValidator_CanBeCreated` - Validacion de creacion de instancia
+El proyecto cuenta con una suite de tests que valida todos los módulos implementados:
 
-**Fase 2 - Estado inicial:**
-- [x] `test_ConfigValidator_HasKnownInitialState` - Verificacion del estado inicial (DLI = 0)
+| Módulo | Tests | Descripción |
+|--------|-------|-------------|
+| **ConfigValidator** | 35 | Validación de parámetros DLI, fotoperiodo, rampas |
+| **SensorDriver** | 38 | Abstracción de sensor PPFD con calibración |
+| **OutputDriver** | 35 | Control de canales LED multicanal |
+| **CalibrationManager** | 30 | Gestión de calibración con offset/gain |
+| **ControlUnit** | 35 | Control proporcional en lazo cerrado |
+| **SystemManager** | 32 | Orquestación y máquina de estados |
+| **TOTAL** | **205** | **Cobertura completa del sistema** |
 
-**Fase 3 - Operaciones basicas de parametros:**
-- [x] `test_ConfigValidator_AcceptsValidDLI` - Validacion de asignacion de DLI valido
-- [x] `test_ConfigValidator_AcceptsValidPhotoperiod` - Validacion de asignacion de fotoperiodo valido
+### Arquitectura en Capas
 
-### Funcionalidades Pendientes
-
-Las siguientes funcionalidades seran implementadas siguiendo la misma metodologia TDD:
-
-- Asignacion y validacion de tiempos de rampa (rise/fall time)
-- Rechazo de parametros invalidos (valores negativos, fuera de rango)
-- Validacion de coherencia entre parametros (rampas vs. fotoperiodo)
-- Calculo de alcanzabilidad del DLI objetivo
-- Calculo de intensidad luminica maxima requerida
-- Generacion de sugerencias para configuraciones invalidas
-
-## Interfaz Publica del Modulo (API)
-
-### Tipos de Datos
-
-```c
-// Handle opaco para instancia del validador
-typedef struct ConfigValidator * ConfigValidatorHandle;
-
-// Codigos de error retornados por las operaciones
-typedef enum {
-    CONFIG_OK = 0
-} ConfigValidatorError;
-```
-
-### Funciones Implementadas
-
-#### Gestion del ciclo de vida
-```c
-ConfigValidatorHandle ConfigValidator_Create(void);
-void ConfigValidator_Destroy(ConfigValidatorHandle handle);
-```
-
-#### Configuracion de DLI
-```c
-ConfigValidatorError ConfigValidator_SetDLI(ConfigValidatorHandle handle, uint16_t dli);
-ConfigValidatorError ConfigValidator_GetDLI(ConfigValidatorHandle handle, uint16_t * dli);
-```
-
-#### Configuracion de Fotoperiodo
-```c
-ConfigValidatorError ConfigValidator_SetPhotoperiod(ConfigValidatorHandle handle, uint8_t photoperiod);
-ConfigValidatorError ConfigValidator_GetPhotoperiod(ConfigValidatorHandle handle, uint8_t * photoperiod);
-```
-
-### Funciones Planificadas (Pendientes de Implementacion)
-
-- `ConfigValidator_SetRiseTime()` / `ConfigValidator_GetRiseTime()`
-- `ConfigValidator_SetFallTime()` / `ConfigValidator_GetFallTime()`
-- `ConfigValidator_ValidateConfiguration()`
-- `ConfigValidator_GetMaxIntensity()`
-- `ConfigValidator_GetSuggestedDLI()`
-- `ConfigValidator_GetSuggestedPhotoperiod()`
-- `ConfigValidator_GetSuggestedRampTimes()`
-
-## Estructura del Repositorio
+El sistema sigue una arquitectura limpia de 4 capas:
 
 ```
-proyecto-final-cese/
-├── inc/                        # Archivos de cabecera publicos
-│   └── config_validator.h      # Interfaz del modulo validador
-├── src/                        # Codigo fuente de implementacion
-│   └── config_validator.c      # Implementacion del validador
-├── test/                       # Suite de tests unitarios
-│   ├── test_config_validator.c # Tests del modulo validador
-│   └── support/                # Codigo auxiliar para testing
-├── build/                      # Artefactos de compilacion (ignorado por git)
-├── project.yml                 # Configuracion de Ceedling
-├── makefile                    # Configuracion de compilacion alternativa
-└── README.md                   # Presente documento
+┌─────────────────────────────────────────────────────────────┐
+│                    APPLICATION LAYER                        │
+│                                                             │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │              SystemManager (Fase 4) ✅                 │ │
+│  │  - Máquina de estados: IDLE, MANUAL, AUTO, ERROR       │ │
+│  │  - Coordinación de subsistemas                         │ │
+│  │  - Run() loop principal                                │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    INTERFACE LAYER (Fase 3)                 │
+│  [ UserInterface | CommunicationInterface ]  ⏳ Pendiente   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                   BUSINESS LOGIC LAYER                      │
+│                                                             │
+│  ┌───────────────────┐      ┌──────────────────────────┐    │
+│  │  ControlUnit ✅   │      │ CalibrationManager ✅    │    │
+│  │  - Control PI     │      │ - Calibración manual     │    │
+│  │  - Lazo cerrado   │      │ - Offset/Gain            │    │
+│  │  - Auto/Manual    │      │ - Validación CRC         │    │
+│  └───────────────────┘      └──────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                   HARDWARE ABSTRACTION LAYER                │
+│                                                             │
+│  ┌────────────────┐  ┌───────────────┐  ┌─────────────────┐ │
+│  │ ConfigValidator│  │ SensorDriver  │  │ OutputDriver    │ │
+│  │ ✅ DLI/Photo   │  │ ✅ PPFD 0-4000│  │ ✅ 4 canales LED│ │
+│  │ ✅ Validación  │  │ ✅ Calibración│  │ ✅ PWM/DAC      │ │
+│  └────────────────┘  └───────────────┘  └─────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Compilacion y Ejecucion
+**Leyenda:**
+- ✅ Completado y probado
+- ⏳ Planificado (Fase 3)
 
-### Entorno de Testing (Ceedling)
+## Características Principales
+
+### Control Automático (ControlUnit)
+- **Control proporcional (PI)** con parámetros configurables (Kp, Ki)
+- **Anti-windup** para prevenir saturación del integrador
+- **Rango de setpoint**: 0-4000 µmol/m²/s
+- **Frecuencia de actualización**: 1 Hz (configurable)
+- **Modos operativos**: Manual, Automático, Deshabilitado
+
+### Gestión de Calibración (CalibrationManager)
+- **Calibración de dos puntos** (offset + gain)
+- **Persistencia de datos** con timestamp
+- **Validación CRC** para integridad de datos
+- **Aplicación automática** al sensor driver
+
+### Máquina de Estados (SystemManager)
+- **Estados**: UNINITIALIZED, IDLE, MANUAL, AUTOMATIC, CALIBRATING, ERROR
+- **Transiciones validadas** con reglas estrictas
+- **Emergency stop** con deshabilitación inmediata de salidas
+- **Recuperación desde ERROR** mediante reset
+
+### Abstracción de Hardware
+- **SensorDriver**: Interfaz genérica para sensores PPFD con filtrado
+- **OutputDriver**: Control de 4 canales LED independientes (0-100%)
+- **Inyección de dependencias**: Hardware interfaces para testeabilidad
+
+## Metodología de Desarrollo: Test-Driven Development
+
+### Ciclo TDD Aplicado
+
+Todo el proyecto fue desarrollado siguiendo el ciclo TDD:
+
+1. **RED (Rojo):** Escritura de test que falla
+2. **GREEN (Verde):** Implementación mínima para pasar el test
+3. **REFACTOR:** Mejora del código manteniendo tests verdes
+
+### Principios Aplicados
+
+- ✅ **Validación de tests:** Todo test observado en falla antes de implementar
+- ✅ **Desarrollo incremental:** Una funcionalidad a la vez
+- ✅ **Implementación mínima:** Solo código necesario para satisfacer tests
+- ✅ **Asignación estática:** No se usa malloc/free (embedded-friendly)
+- ✅ **Separación de concerns:** Arquitectura en capas bien definida
+- ✅ **Inyección de dependencias:** Interfaces de hardware mockeables
+
+## Entorno de Testing: Ceedling
+
+El proyecto utiliza **Ceedling** (versión 1.0.1) que integra:
+
+- **Unity:** Framework de assertions para C
+- **CMock:** Generador de mocks
+- **GCov/GCovr:** Análisis de cobertura de código
+
+### Comandos de Ejecución
+
 ```bash
-# Compilacion y ejecucion de tests
+# Ejecución de todos los tests (205 tests)
 ceedling test:all
+
+# Ejecución de tests por módulo
+ceedling test:config_validator
+ceedling test:sensor_driver
+ceedling test:output_driver
+ceedling test:calibration_manager
+ceedling test:control_unit
+ceedling test:system_manager
+
+# Generación de reporte de cobertura
+ceedling gcov:all
 
 # Limpieza de artefactos
 ceedling clean
 ```
 
-### Compilacion para Produccion (Makefile)
-```bash
-# Compilacion del proyecto
-make all
+## Interfaz Pública del Sistema
 
-# Limpieza de objetos y ejecutables
-make clean
+### SystemManager (Orquestador Principal)
+
+```c
+// Estados del sistema
+typedef enum {
+    SYSTEM_STATE_UNINITIALIZED,
+    SYSTEM_STATE_IDLE,
+    SYSTEM_STATE_MANUAL,
+    SYSTEM_STATE_AUTOMATIC,
+    SYSTEM_STATE_CALIBRATING,
+    SYSTEM_STATE_ERROR
+} SystemState;
+
+// API principal
+SystemManagerHandle SystemManager_Create(SensorHardwareInterface *sensorHw,
+                                         OutputHardwareInterface *outputHw);
+void SystemManager_Destroy(SystemManagerHandle handle);
+SystemError SystemManager_Init(SystemManagerHandle handle);
+SystemError SystemManager_Run(SystemManagerHandle handle);
+SystemError SystemManager_SetState(SystemManagerHandle handle, SystemState state);
+SystemError SystemManager_EmergencyStop(SystemManagerHandle handle);
 ```
 
-## Stack Tecnologico
+### ControlUnit (Control en Lazo Cerrado)
 
-- **Lenguaje:** C (estandar C99)
+```c
+// Modos de control
+typedef enum {
+    CONTROL_MODE_MANUAL,
+    CONTROL_MODE_AUTOMATIC,
+    CONTROL_MODE_DISABLED
+} ControlMode;
+
+// Parámetros PI
+typedef struct {
+    float Kp;            // Ganancia proporcional
+    float Ki;            // Ganancia integral
+    float integralLimit; // Límite anti-windup
+} PIParameters;
+
+// API de control
+ControlError ControlUnit_SetMode(ControlUnitHandle handle, ControlMode mode);
+ControlError ControlUnit_SetSetpoint(ControlUnitHandle handle, uint16_t ppfd_umol);
+ControlError ControlUnit_SetPIParameters(ControlUnitHandle handle, PIParameters params);
+ControlError ControlUnit_Update(ControlUnitHandle handle);  // Llamar a 1 Hz
+```
+
+### CalibrationManager (Gestión de Calibración)
+
+```c
+// Calibración manual de dos puntos
+CalibrationError CalibrationManager_SetCalibration(CalibrationManagerHandle handle,
+                                                   float offset_umol,
+                                                   float gain,
+                                                   uint32_t timestamp_ms);
+CalibrationError CalibrationManager_GetCalibration(CalibrationManagerHandle handle,
+                                                   CalibrationInfo *calibration);
+CalibrationError CalibrationManager_ApplyToSensor(CalibrationManagerHandle handle);
+CalibrationError CalibrationManager_IsValid(CalibrationManagerHandle handle, bool *isValid);
+```
+
+## Estructura del Repositorio
+
+```
+proyecto-final-cese/
+├── inc/                           # Archivos de cabecera públicos
+│   ├── config_validator.h         # Validador de configuración DLI
+│   ├── sensor_driver.h            # Driver abstracto de sensor PPFD
+│   ├── output_driver.h            # Driver de salidas LED multicanal
+│   ├── calibration_manager.h     # Gestor de calibración
+│   ├── control_unit.h            # Unidad de control PI
+│   └── system_manager.h          # Orquestador del sistema
+├── src/                          # Código fuente de implementación
+│   ├── config_validator.c
+│   ├── sensor_driver.c
+│   ├── output_driver.c
+│   ├── calibration_manager.c
+│   ├── control_unit.c
+│   └── system_manager.c
+├── test/                         # Suite de tests unitarios (205 tests)
+│   ├── test_config_validator.c   # 35 tests
+│   ├── test_sensor_driver.c      # 38 tests
+│   ├── test_output_driver.c      # 35 tests
+│   ├── test_calibration_manager.c # 30 tests
+│   ├── test_control_unit.c       # 35 tests
+│   ├── test_system_manager.c     # 32 tests
+│   └── support/                  # Código auxiliar para testing
+├── docs/                         # Documentación del proyecto
+│   └── ARCHITECTURE_LAYERS.md    # Descripción de arquitectura
+├── build/                        # Artefactos de compilación (ignorado)
+├── project.yml                   # Configuración de Ceedling
+└── README.md                     # Presente documento
+```
+
+## Próximos Pasos
+
+### Fase 3: Interface Layer (Planificado)
+- **UserInterface**: CLI por UART para configuración manual
+- **CommunicationInterface**: Protocolo Puerto G para telemetría remota
+
+### Integración con Hardware STM32F446RE
+- Implementación de hardware interfaces reales
+- Testing en plataforma objetivo
+- Ajuste de parámetros PI según respuesta del sistema
+- Medición de rendimiento en tiempo real
+
+### Características Avanzadas
+- Control de distribución espectral (ratio R:B:FR)
+- Calibración automática con lámpara de referencia
+- Detección de drift del sensor
+- Scheduling de perfiles de luz diarios
+
+## Stack Tecnológico
+
+- **Lenguaje:** C (estándar C99)
+- **Target:** STM32F446RE (ARM Cortex-M4)
 - **Framework de Testing:** Ceedling 1.0.1
 - **Framework de Assertions:** Unity
 - **Framework de Mocking:** CMock
-- **Compilador:** GCC con flags de advertencia habilitados (-Wall -Wextra -Werror -pedantic)
-- **Analisis de Cobertura:** GCov + GCovr
+- **Compilador:** GCC con flags estrictos (-Wall -Wextra -Werror)
+- **Análisis de Cobertura:** GCov + GCovr
 - **Control de Versiones:** Git
-- **Formato de Codigo:** clang-format
+- **Formato de Código:** clang-format
 - **Hooks de Pre-commit:** pre-commit framework
+- **CI/CD:** GitHub Actions (tests automáticos en cada push)
 
-## Referencias Bibliograficas
+## Referencias Bibliográficas
 
 - Grenning, J. W. (2011). *Test-Driven Development for Embedded C*. Pragmatic Bookshelf.
-- Documentacion oficial de Ceedling. ThrowTheSwitch.org. Disponible en: http://throwtheswitch.org/
-- Documentacion de Unity Test Framework. GitHub. Disponible en: https://github.com/ThrowTheSwitch/Unity
+- Documentación oficial de Ceedling. ThrowTheSwitch.org. http://throwtheswitch.org/
+- Documentación de Unity Test Framework. https://github.com/ThrowTheSwitch/Unity
+- STM32F446RE Reference Manual. STMicroelectronics.
 
 ## Autor
 
 **Fernando Folmer**
-Estudiante de la Especializacion en Sistemas Embebidos (CESE)
-Facultad de Ingenieria - Universidad de Buenos Aires (FIUBA)
+Estudiante de la Especialización en Sistemas Embebidos (CESE)
+Facultad de Ingeniería - Universidad de Buenos Aires (FIUBA)
 
 ## Licencia
 
-Proyecto academico desarrollado en el marco del trabajo final de la Especializacion en Sistemas Embebidos.
+Proyecto académico desarrollado en el marco del trabajo final de la Especialización en Sistemas Embebidos.
