@@ -8,11 +8,14 @@
 #define PHOTOPERIOD_MAX 24
 #define RISE_TIME_MIN   30
 #define RISE_TIME_MAX   90
+#define FALL_TIME_MIN   30
+#define FALL_TIME_MAX   90
 
 struct ConfigValidator {
     uint16_t dli;
     uint8_t photoperiod;
     uint8_t riseTime;
+    uint8_t fallTime;
 };
 
 static struct ConfigValidator instance;
@@ -33,6 +36,7 @@ ConfigValidatorHandle ConfigValidator_Create(void) {
     instance.dli = 0;
     instance.photoperiod = 0;
     instance.riseTime = 0;
+    instance.fallTime = 0;
     return &instance;
 }
 
@@ -96,5 +100,24 @@ ConfigValidatorError ConfigValidator_SetRiseTime(ConfigValidatorHandle handle, u
         return CONFIG_ERROR_INVALID_PARAMETER;
     }
     handle->riseTime = riseTime;
+    return CONFIG_OK;
+}
+
+ConfigValidatorError ConfigValidator_GetFallTime(ConfigValidatorHandle handle, uint8_t * fallTime) {
+    if (!isValidHandle(handle) || !isValidPointer(fallTime)) {
+        return CONFIG_ERROR_NULL_POINTER;
+    }
+    *fallTime = handle->fallTime;
+    return CONFIG_OK;
+}
+
+ConfigValidatorError ConfigValidator_SetFallTime(ConfigValidatorHandle handle, uint8_t fallTime) {
+    if (!isValidHandle(handle)) {
+        return CONFIG_ERROR_NULL_POINTER;
+    }
+    if (!isInRange(fallTime, FALL_TIME_MIN, FALL_TIME_MAX)) {
+        return CONFIG_ERROR_INVALID_PARAMETER;
+    }
+    handle->fallTime = fallTime;
     return CONFIG_OK;
 }

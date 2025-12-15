@@ -1,0 +1,6 @@
+---
+:source:
+  :dependencies:
+    - config_validator.c
+    - sensor_driver.c
+    - output_driver.c
