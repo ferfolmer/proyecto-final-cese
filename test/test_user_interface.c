@@ -295,6 +295,22 @@ void test_UserInterface_ProcessInput_IsCaseInsensitive(void) {
     TEST_ASSERT_EQUAL(CMD_HELP, cmd.type);
 }
 
+void test_UserInterface_ProcessInput_RejectsNonNumericArg(void) {
+    UserInterface_Init(ui);
+    Command cmd;
+    UserInterfaceError result = UserInterface_ProcessInput(ui, "SET_DLI abc", &cmd);
+    TEST_ASSERT_EQUAL(UI_ERROR_INVALID_COMMAND, result);
+    TEST_ASSERT_EQUAL(CMD_UNKNOWN, cmd.type);
+}
+
+void test_UserInterface_ProcessInput_RejectsNonNumericSecondArg(void) {
+    UserInterface_Init(ui);
+    Command cmd;
+    UserInterfaceError result = UserInterface_ProcessInput(ui, "SET_RATIO 40 xyz", &cmd);
+    TEST_ASSERT_EQUAL(UI_ERROR_INVALID_COMMAND, result);
+    TEST_ASSERT_EQUAL(CMD_UNKNOWN, cmd.type);
+}
+
 void test_UserInterface_ProcessInput_TrimsLeadingWhitespace(void) {
     UserInterface_Init(ui);
     Command cmd;

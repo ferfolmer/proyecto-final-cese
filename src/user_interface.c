@@ -48,7 +48,7 @@ static const CommandEntry commandTable[] = {
 // ========== Static Helpers ==========
 
 static void ToUpperCase(char * str) {
-    for (uint8_t i = 0; str[i] != '\0'; i++) {
+    for (size_t i = 0; str[i] != '\0'; i++) {
         if (str[i] >= 'a' && str[i] <= 'z') {
             str[i] = (char)(str[i] - ('a' - 'A'));
         }
@@ -63,7 +63,7 @@ static const char * SkipWhitespace(const char * str) {
 }
 
 static UserInterfaceError ParseCommand(const char * input, Command * cmd) {
-    char workBuffer[64];
+    char workBuffer[UI_INPUT_BUFFER_SIZE];
     memset(cmd, 0, sizeof(Command));
     cmd->type = CMD_UNKNOWN;
 
@@ -105,13 +105,20 @@ static UserInterfaceError ParseCommand(const char * input, Command * cmd) {
     }
 
     // Extract arguments
+    // strtoul returns unsigned long per C99; no fixed-width alternative exists
     if (numArgs >= 1) {
         token = strtok(NULL, " \t");
         if (token == NULL) {
             cmd->type = CMD_UNKNOWN;
             return UI_ERROR_INVALID_COMMAND;
         }
-        cmd->arg1 = (uint16_t)strtoul(token, NULL, 10);
+        char * endptr;
+        unsigned long val = strtoul(token, &endptr, 10);
+        if (endptr == token) {
+            cmd->type = CMD_UNKNOWN;
+            return UI_ERROR_INVALID_COMMAND;
+        }
+        cmd->arg1 = (uint16_t)val;
     }
 
     if (numArgs >= 2) {
@@ -120,7 +127,13 @@ static UserInterfaceError ParseCommand(const char * input, Command * cmd) {
             cmd->type = CMD_UNKNOWN;
             return UI_ERROR_INVALID_COMMAND;
         }
-        cmd->arg2 = (uint16_t)strtoul(token, NULL, 10);
+        char * endptr;
+        unsigned long val = strtoul(token, &endptr, 10);
+        if (endptr == token) {
+            cmd->type = CMD_UNKNOWN;
+            return UI_ERROR_INVALID_COMMAND;
+        }
+        cmd->arg2 = (uint16_t)val;
     }
 
     return UI_OK;
